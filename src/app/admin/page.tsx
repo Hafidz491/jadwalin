@@ -45,6 +45,7 @@ import {
   Crown,
   Info,
   Bell,
+  Upload,
 } from 'lucide-react';
 import {
   AreaChart, Area,
@@ -852,6 +853,14 @@ function CourtFormPanel({
     };
   }, []);
 
+  const SPORT_IMAGE_MAP: Record<string, string> = {
+    Futsal: 'https://images.unsplash.com/photo-1518063319808-c89b2dbfc31c?w=800&auto=format&fit=crop&q=80',
+    Badminton: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80',
+    Padel: 'https://images.unsplash.com/photo-1629851613917-0d32c0d8d5fb?w=800&auto=format&fit=crop&q=80',
+    'Mini Soccer': 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
+    Tennis: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&auto=format&fit=crop&q=80',
+  };
+
   const validate = () => {
     const e: Partial<Record<keyof CourtForm, string>> = {};
     if (!form.name.trim()) e.name = 'Nama lapangan wajib diisi';
@@ -875,7 +884,7 @@ function CourtFormPanel({
       name: form.name.trim(),
       sportType: form.sportType,
       description: form.description.trim(),
-      imageUrl: form.imageUrl.trim() || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80',
+      imageUrl: form.imageUrl.trim() || SPORT_IMAGE_MAP[form.sportType] || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80',
       pricePerHour: form.pricePerHour,
       peakPricePerHour: form.peakPricePerHour || undefined,
       peakStartHour: form.peakPricePerHour ? form.peakStartHour : undefined,
@@ -976,30 +985,68 @@ function CourtFormPanel({
             />
           </div>
 
-          {/* URL Gambar */}
+          {/* Foto Lapangan */}
           <div>
             <label className="text-[11px] font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-              <ImagePlus className="w-3.5 h-3.5 text-slate-400" /> URL Foto Lapangan
+              <ImagePlus className="w-3.5 h-3.5 text-slate-400" /> Foto Lapangan (Opsional)
             </label>
-            <input
-              type="url"
-              placeholder="https://images.unsplash.com/photo-..."
-              value={form.imageUrl}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              className={inputCls}
-            />
+            <div className="flex gap-2 items-start">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                      alert('Ukuran gambar maksimal 2MB');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      if (ev.target?.result) {
+                        setForm({ ...form, imageUrl: ev.target.result as string });
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="hidden"
+                id="court-image-upload"
+              />
+              <label
+                htmlFor="court-image-upload"
+                className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm text-[11px] font-bold flex items-center gap-2 shrink-0"
+              >
+                <Upload className="w-3.5 h-3.5" /> Upload File
+              </label>
+              <input
+                type="url"
+                placeholder="Atau tempel URL gambar..."
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                className={inputCls + ' flex-1 min-w-0'}
+              />
+            </div>
             {form.imageUrl && (
-              <div className="mt-2 relative rounded-xl overflow-hidden border border-white/10 h-28 w-full group">
+              <div className="mt-2 relative rounded-xl overflow-hidden border border-white/10 h-28 w-full group bg-slate-800">
                 <img
                   src={form.imageUrl}
                   alt="Preview"
                   className="w-full h-full object-cover"
                   onError={(e) => (e.currentTarget.style.display = 'none')}
                 />
-                <span className="absolute bottom-1.5 right-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[9px] font-semibold backdrop-blur-xs">
-                  Pratinjau Foto
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, imageUrl: '' })}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer"
+                  title="Hapus gambar"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
+            )}
+            {!form.imageUrl && (
+               <p className="text-[10px] text-slate-400 mt-1">Jika dikosongkan, gambar otomatis disesuaikan dengan jenis olahraga.</p>
             )}
           </div>
 
