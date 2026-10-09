@@ -1,5 +1,5 @@
 import { Tenant, Court, Booking, FinancialMetric, SportType } from './types';
-import { getTodayDateString } from './utils';
+import { getTodayDateString, isBookingActive } from './utils';
 import { getCurrentUser } from './auth';
 import {
   getTenantAction,
@@ -108,6 +108,8 @@ export async function getTenantData(): Promise<Tenant | null> {
   return INITIAL_TENANT;
 }
 
+
+
 export async function saveTenantData(tenant: Tenant): Promise<void> {
   const currentUser = getCurrentUser();
   const isExplicitDemo = Boolean(currentUser?.isDemo || (tenant?.slug === 'gor-nusantara' && !currentUser));
@@ -209,7 +211,7 @@ export function getFinancialMetrics(customBookings?: Booking[]): {
   let totalBookings = 0;
 
   bookings.forEach((b) => {
-    if (b.bookingStatus !== 'CANCELLED') {
+    if (isBookingActive(b)) {
       monthRevenue += b.totalAmount;
       totalBookings += 1;
 

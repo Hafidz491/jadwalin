@@ -109,3 +109,23 @@ export function getNextDays(daysCount: number = 14): { date: string; label: stri
   }
   return days;
 }
+
+export function isBookingExpired(booking: { bookingStatus?: string; paymentStatus?: string; isManualBooking?: boolean; expiresAt?: string; createdAt?: string }): boolean {
+  if (!booking) return false;
+  if (booking.bookingStatus === 'PENDING_PAYMENT' && booking.paymentStatus !== 'SETTLEMENT') {
+    const now = Date.now();
+    if (booking.expiresAt) {
+      return new Date(booking.expiresAt).getTime() < now;
+    } else if (booking.createdAt) {
+      return now - new Date(booking.createdAt).getTime() > 15 * 60 * 1000;
+    }
+  }
+  return false;
+}
+
+export function isBookingActive(booking: { bookingStatus?: string; paymentStatus?: string; isManualBooking?: boolean; expiresAt?: string; createdAt?: string }): boolean {
+  if (!booking) return false;
+  if (booking.bookingStatus === 'CANCELLED' || booking.bookingStatus === 'NO_SHOW') return false;
+  if (isBookingExpired(booking)) return false;
+  return true;
+}

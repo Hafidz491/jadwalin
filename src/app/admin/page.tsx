@@ -80,6 +80,7 @@ import {
   formatCurrency,
   getTodayDateString,
   formatDateIndo,
+  isBookingActive,
 } from '@/lib/utils';
 
 // ─── Mini Barcode Component ─────────────────────────────────────────
@@ -334,7 +335,7 @@ function HomeTab({
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(now.getFullYear(), now.getMonth(), d);
       const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayB = bookings.filter((b) => b.date === dateStr && b.bookingStatus !== 'CANCELLED');
+      const dayB = bookings.filter((b) => b.date === dateStr && isBookingActive(b));
       days.push({
         date: dateStr,
         day: d,
@@ -352,7 +353,7 @@ function HomeTab({
       const d = new Date();
       d.setDate(d.getDate() - i);
       const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      data.push(bookings.filter((b) => b.date === ds && b.bookingStatus !== 'CANCELLED').reduce((s, b) => s + b.totalAmount, 0));
+      data.push(bookings.filter((b) => b.date === ds && isBookingActive(b)).reduce((s, b) => s + b.totalAmount, 0));
       labels.push(String(d.getDate()));
     }
     return { data, labels };
@@ -365,14 +366,14 @@ function HomeTab({
       const d = new Date();
       d.setDate(d.getDate() - i);
       const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      data.push(bookings.filter((b) => b.date === ds && b.bookingStatus !== 'CANCELLED').length);
+      data.push(bookings.filter((b) => b.date === ds && isBookingActive(b)).length);
       labels.push(String(d.getDate()));
     }
     return { data, labels };
   }, [bookings]);
 
   const totalRevenue = useMemo(
-    () => bookings.filter((b) => b.bookingStatus !== 'CANCELLED').reduce((s, b) => s + b.totalAmount, 0),
+    () => bookings.filter((b) => isBookingActive(b)).reduce((s, b) => s + b.totalAmount, 0),
     [bookings]
   );
 
@@ -672,7 +673,7 @@ function HomeTab({
             <p className="text-[10px] text-slate-400">Semua reservasi aktif dari database</p>
           </div>
           <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20">
-            {bookings.filter((b) => b.bookingStatus !== 'CANCELLED').length} Aktif
+            {bookings.filter((b) => isBookingActive(b)).length} Aktif
           </span>
         </div>
 
@@ -691,7 +692,7 @@ function HomeTab({
             </thead>
             <tbody className="divide-y divide-white/5">
               {bookings
-                .filter((b) => b.bookingStatus !== 'CANCELLED')
+                .filter((b) => isBookingActive(b))
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((b) => (
                   <tr key={b.id} className="hover:bg-blue-500/10/30 transition-colors">
@@ -757,7 +758,7 @@ function HomeTab({
                     </td>
                   </tr>
                 ))}
-              {bookings.filter((b) => b.bookingStatus !== 'CANCELLED').length === 0 && (
+              {bookings.filter((b) => isBookingActive(b)).length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-14 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -1439,7 +1440,7 @@ function CourtsTab({
                     {/* Booking stats */}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
                       <span className="text-[10px] text-slate-400">
-                        {bookings.filter((b) => b.courtId === court.id && b.bookingStatus !== 'CANCELLED').length} kali dibooking
+                        {bookings.filter((b) => b.courtId === court.id && isBookingActive(b)).length} kali dibooking
                       </span>
                       <div className="flex items-center gap-1.5">
                         <button
@@ -1528,7 +1529,7 @@ function CourtsTab({
                             book.date === selectedDate &&
                             hour >= book.startHour &&
                             hour < book.endHour &&
-                            book.bookingStatus !== 'CANCELLED'
+                            isBookingActive(book)
                         );
                         if (b) {
                           return (
@@ -1597,8 +1598,8 @@ function FinanceTab({
   metrics: ReturnType<typeof getFinancialMetrics>;
 }) {
   const courtRevenue = courts.map((c) => {
-    const rev = bookings.filter((b) => b.courtId === c.id && b.bookingStatus !== 'CANCELLED').reduce((s, b) => s + b.totalAmount, 0);
-    const count = bookings.filter((b) => b.courtId === c.id && b.bookingStatus !== 'CANCELLED').length;
+    const rev = bookings.filter((b) => b.courtId === c.id && isBookingActive(b)).reduce((s, b) => s + b.totalAmount, 0);
+    const count = bookings.filter((b) => b.courtId === c.id && isBookingActive(b)).length;
     return { court: c, rev, count };
   });
   const totalRev = courtRevenue.reduce((s, r) => s + r.rev, 0);
@@ -1682,7 +1683,7 @@ function FinanceTab({
             </thead>
             <tbody className="divide-y divide-white/5">
               {bookings
-                .filter((b) => b.bookingStatus !== 'CANCELLED')
+                .filter((b) => isBookingActive(b))
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((b) => (
                   <tr key={b.id} className="hover:bg-white/5 transition-colors">
