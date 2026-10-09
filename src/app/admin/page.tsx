@@ -1253,7 +1253,8 @@ function CourtsTab({
   const [activeSection, setActiveSection] = useState<'schedule' | 'courts'>('courts');
   
   const openH = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
-  const closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+  let closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+  if (closeH <= openH) closeH += 24;
   const hoursList = Array.from({ length: closeH - openH }, (_, i) => i + openH);
 
   const handleAddCourtClick = () => {
@@ -2884,8 +2885,16 @@ function AdminDashboardContent() {
         initialCourtId={prefilledCourtId}
         initialDate={prefilledDate || getTodayDateString()}
         initialHour={prefilledHour}
-        openHour={tenant?.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7}
-        closeHour={tenant?.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23}
+        openHour={(() => {
+          const o = tenant?.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
+          return o;
+        })()}
+        closeHour={(() => {
+          const o = tenant?.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
+          let c = tenant?.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+          if (c <= o) c += 24;
+          return c;
+        })()}
         onSuccess={async (newBooking) => {
           if (newBooking) {
             const u = getCurrentUser();

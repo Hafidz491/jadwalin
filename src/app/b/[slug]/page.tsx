@@ -113,7 +113,8 @@ export default function TenantBookingPage() {
 
     // 2. Check operational hours
     const openH = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
-    const closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+    let closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+    if (closeH <= openH) closeH += 24;
     if (h < openH || h >= closeH) return false;
 
     // 3. Check conflicting bookings and auto-expire pending bookings
@@ -688,8 +689,16 @@ export default function TenantBookingPage() {
             bookings={bookings}
             selectedHours={selectedHours}
             onToggleHour={handleToggleHour}
-            openHour={tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7}
-            closeHour={tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23}
+            openHour={(() => {
+              const o = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
+              return o;
+            })()}
+            closeHour={(() => {
+              const o = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
+              let c = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+              if (c <= o) c += 24;
+              return c;
+            })()}
           />
         </section>
         </>

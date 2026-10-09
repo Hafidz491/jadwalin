@@ -83,7 +83,8 @@ export function BookingModal({
   const handleSetDurationInModal = (targetDuration: number) => {
     setFormError(null);
     const openH = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
-    const closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+    let closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+    if (closeH <= openH) closeH += 24;
 
     const newHours: number[] = [];
     for (let i = 0; i < targetDuration; i++) {

@@ -44,14 +44,14 @@ export function formatDateShort(dateStr: string): string {
 }
 
 export function formatTimeSlot(hour: number): string {
-  const start = String(hour).padStart(2, '0') + ':00';
-  const end = String(hour + 1).padStart(2, '0') + ':00';
+  const start = String(hour % 24).padStart(2, '0') + ':00';
+  const end = String((hour + 1) % 24).padStart(2, '0') + ':00';
   return `${start} - ${end}`;
 }
 
 export function formatHourRange(startHour: number, endHour: number): string {
-  const start = String(startHour).padStart(2, '0') + ':00';
-  const end = String(endHour).padStart(2, '0') + ':00';
+  const start = String(startHour % 24).padStart(2, '0') + ':00';
+  const end = String(endHour % 24).padStart(2, '0') + ':00';
   return `${start} - ${end} WIB`;
 }
 
