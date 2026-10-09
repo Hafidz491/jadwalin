@@ -22,9 +22,8 @@ import { BookingModal } from '@/components/BookingModal';
 import { getTenantData, getCourtsData, getBookingsData, saveBookingsData, INITIAL_TENANT } from '@/lib/data';
 import { Tenant, Court, Booking } from '@/lib/types';
 import { formatCurrency, formatDateIndo, formatHourRange, getNextDays, getTodayDateString } from '@/lib/utils';
-
+import useSWR from 'swr';
 export default function TenantBookingPage() {
-  const [isMounted, setIsMounted] = useState(false);
   const [tenant, setTenant] = useState<Tenant>(() => INITIAL_TENANT);
   const [courts, setCourts] = useState<Court[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -40,66 +39,40 @@ export default function TenantBookingPage() {
 
   const availableDays = getNextDays(14);
 
-  const refreshBookings = async () => {
-    // Real-time tenant profile sync
+  const fetcher = async () => {
     const loadedTenant = await getTenantData();
-    if (loadedTenant) setTenant(loadedTenant);
     const loadedCourts = await getCourtsData();
-    if (loadedCourts) setCourts(loadedCourts);
-
+    let loadedBookings: Booking[] = [];
     try {
-      const currentTenantId = loadedTenant?.id || tenant.id;
+      const currentTenantId = loadedTenant?.id || 'tenant-owner-001';
       const res = await fetch(`/api/bookings?tenantId=${currentTenantId}`, { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {
-          setBookings(json.data);
+          loadedBookings = json.data;
           await saveBookingsData(json.data);
-          return;
         }
+      } else {
+        loadedBookings = await getBookingsData();
       }
     } catch {
-      // fallback to local storage
+      loadedBookings = await getBookingsData();
     }
-    setBookings(await getBookingsData());
+    return { loadedTenant, loadedCourts, loadedBookings };
   };
 
+  const { data } = useSWR('guestData', fetcher, { refreshInterval: 15000 });
+
   useEffect(() => {
-    setIsMounted(true);
-    async function load() {
-      const loadedTenant = await getTenantData();
-      const loadedCourts = await getCourtsData();
-      const loadedBookings = await getBookingsData();
-      if (loadedTenant) setTenant(loadedTenant);
-      if (loadedCourts) setCourts(loadedCourts);
-      if (loadedBookings) setBookings(loadedBookings);
-      if (loadedCourts && loadedCourts.length > 0) {
-        setSelectedCourtId((prev) => prev || loadedCourts[0].id);
+    if (data?.loadedTenant) setTenant(data.loadedTenant);
+    if (data?.loadedCourts) {
+      setCourts(data.loadedCourts);
+      if (!selectedCourtId && data.loadedCourts.length > 0) {
+        setSelectedCourtId(data.loadedCourts[0].id);
       }
     }
-    load();
-  }, []);
-
-  // Real-time synchronization: poll every 15s to catch new manual/online bookings
-  useEffect(() => {
-    if (!isMounted) return;
-    refreshBookings();
-    const interval = setInterval(refreshBookings, 15000);
-    return () => clearInterval(interval);
-  }, [isMounted, selectedDate, selectedCourtId]);
-
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center animate-pulse">
-            <CalendarCheck2 className="w-5 h-5 stroke-[2.2]" />
-          </div>
-          <div className="animate-pulse text-slate-400 font-medium text-sm">Memuat jadwal venue...</div>
-        </div>
-      </div>
-    );
-  }
+    if (data?.loadedBookings) setBookings(data.loadedBookings);
+  }, [data, selectedCourtId]);
 
   const currentCourt = courts.find((c) => c.id === selectedCourtId) || courts[0] || null;
 
@@ -801,7 +774,7 @@ export default function TenantBookingPage() {
             setDurationPreset(newHours.length);
           }}
           onBookingSuccess={() => {
-            refreshBookings();
+            import('swr').then((swr) => swr.mutate('guestData'));
           }}
         />
       )}

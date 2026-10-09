@@ -156,7 +156,7 @@ export function InteractiveTimeGrid({
                 </div>
                 <div>
                   <span className="text-xs font-bold text-rose-950 truncate block">
-                    {booking?.customerName ? booking.customerName.slice(0, 14) : 'Sudah Dibooking'}
+                    Sudah Dibooking
                   </span>
                   <span className="text-[10px] text-rose-600 font-medium">Slot tidak tersedia</span>
                 </div>
