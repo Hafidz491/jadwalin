@@ -217,3 +217,45 @@ export async function addBookingAction(booking: Booking): Promise<void> {
     throw e;
   }
 }
+
+export async function getGuestWebDataAction(slug: string): Promise<{ tenant: Tenant; courts: Court[]; bookings: Booking[] } | null> {
+  const t = await prisma.tenant.findUnique({
+    where: { slug },
+    include: {
+      courts: true,
+      bookings: {
+        orderBy: { createdAt: 'desc' }
+      }
+    }
+  });
+  if (!t) return null;
+
+  const tenant = {
+    ...t,
+    facilities: [], 
+    subscription: {
+      tier: t.subscriptionTier as SubscriptionTier,
+      status: 'ACTIVE',
+      isTrial: false,
+      trialDaysLeft: 0,
+      trialEndsAt: '',
+      activatedAt: new Date().toISOString(),
+      expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+      pricePerMonth: 0,
+      courtLimit: 99,
+    },
+  } as unknown as Tenant;
+
+  const courts = t.courts.map(c => ({
+    ...c,
+    features: []
+  })) as unknown as Court[];
+
+  const bookings = t.bookings.map((bk) => ({
+    ...bk,
+    courtName: courts.find(c => c.id === bk.courtId)?.name || 'Unknown',
+    sportType: courts.find(c => c.id === bk.courtId)?.sportType || 'Unknown'
+  })) as unknown as Booking[];
+
+  return { tenant, courts, bookings };
+}
