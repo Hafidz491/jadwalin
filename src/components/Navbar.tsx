@@ -73,7 +73,7 @@ export function Navbar() {
               }}
               className="group inline-flex items-center gap-1.5 pl-3.5 pr-3 py-2 text-[13px] font-semibold rounded-xl bg-white text-slate-950 hover:bg-emerald-300 transition-colors shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_24px_-8px_rgba(255,255,255,0.35)]"
             >
-              Masuk dasbor
+              Masuk
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>
@@ -135,7 +135,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-slate-950 text-sm font-semibold"
               >
-                Masuk dasbor pemilik
+                Masuk
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
