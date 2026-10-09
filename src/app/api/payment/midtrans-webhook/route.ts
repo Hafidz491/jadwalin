@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { updateBooking, getBookingsData, getTenantData } from '@/lib/data';
+import prisma from '@/lib/prisma';
 import { createMidtransSignature } from '@/lib/midtrans';
 import { sendWhatsAppMessageViaGateway, generateBookingSuccessMessage } from '@/lib/whatsapp';
 import { PaymentStatus, BookingStatus } from '@/lib/types';
@@ -16,7 +16,19 @@ export async function POST(request: Request) {
       payment_type,
     } = notification;
 
-    const tenant = await getTenantData();
+    // Retrieve booking directly using Prisma
+    const booking = await prisma.booking.findUnique({
+      where: { bookingCode: order_id }
+    });
+
+    if (!booking) {
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 });
+    }
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: booking.tenantId }
+    });
+
     if (!tenant) {
       return NextResponse.json({ success: false, error: 'Tenant not found' }, { status: 404 });
     }
@@ -52,23 +64,40 @@ export async function POST(request: Request) {
       bookingStatus = 'PENDING_PAYMENT';
     }
 
-    const updatedBooking = await updateBooking(order_id, {
-      paymentStatus,
-      bookingStatus,
-      paymentMethod: payment_type ? payment_type.toUpperCase() : 'Midtrans',
-      paidAt: paymentStatus === 'SETTLEMENT' ? new Date().toISOString() : undefined,
+    const updatedBooking = await prisma.booking.update({
+      where: { bookingCode: order_id },
+      data: {
+        paymentStatus,
+        bookingStatus,
+        paymentMethod: payment_type ? payment_type.toUpperCase() : 'Midtrans',
+        paidAt: paymentStatus === 'SETTLEMENT' ? new Date() : undefined,
+      }
     });
 
     // If settlement, trigger automated WhatsApp notification
     if (updatedBooking && paymentStatus === 'SETTLEMENT' && !updatedBooking.waNotificationSent) {
-      const waMsg = generateBookingSuccessMessage(updatedBooking, tenant);
+      // Create a mapped booking object that matches the expected type for the helper functions
+      const mappedBooking = {
+        ...updatedBooking,
+        startHour: updatedBooking.startHour,
+        endHour: updatedBooking.endHour,
+      };
+      
+      const mappedTenant = {
+        ...tenant,
+      };
+      
+      const waMsg = generateBookingSuccessMessage(mappedBooking as any, mappedTenant as any);
       await sendWhatsAppMessageViaGateway(
         updatedBooking.customerPhone,
         waMsg,
-        tenant.waGatewayToken,
-        tenant.waGatewayProvider
+        tenant.waGatewayToken || undefined,
+        (tenant.waGatewayProvider as any) || undefined
       );
-      updateBooking(order_id, { waNotificationSent: true });
+      await prisma.booking.update({
+        where: { bookingCode: order_id },
+        data: { waNotificationSent: true }
+      });
     }
 
     return NextResponse.json({ success: true, message: 'Midtrans notification processed' });

@@ -23,6 +23,7 @@ import { getBookingsData, getTenantData, saveBookingsData } from '@/lib/data';
 import { Booking, Tenant } from '@/lib/types';
 import { formatCurrency, formatDateIndo, formatHourRange, createWhatsAppLink } from '@/lib/utils';
 import { generateBookingSuccessMessage } from '@/lib/whatsapp';
+import { getTenantAction } from '@/app/actions';
 
 export default function BookingSuccessPage() {
   const params = useParams();
@@ -80,8 +81,13 @@ export default function BookingSuccessPage() {
         if (isMounted) {
           setBooking(b);
           if (b) {
-            const t = await getTenantData();
-            if (t) setTenant(t);
+            try {
+              const t = await getTenantAction(b.tenantId);
+              if (t) setTenant(t);
+            } catch (err) {
+              const t = await getTenantData();
+              if (t) setTenant(t);
+            }
           }
         }
       } catch (e) {
