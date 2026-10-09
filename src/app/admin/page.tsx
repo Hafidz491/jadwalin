@@ -2704,8 +2704,8 @@ function AdminDashboardContent() {
                 {/* Tombol simulasi reset untuk memudahkan pengujian owner */}
                 <button
                   type="button"
-                  onClick={() => {
-                    const restored = simulateSetTrialDays(7);
+                  onClick={async () => {
+                    const restored = await simulateSetTrialDays(7);
                     setTenant(restored);
                     setIsSubscriptionModalOpen(false);
                   }}
@@ -2747,8 +2747,8 @@ function AdminDashboardContent() {
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => {
-                        const updated = simulateSetTrialDays(0);
+                      onClick={async () => {
+                        const updated = await simulateSetTrialDays(0);
                         setTenant(updated);
                         setIsSubscriptionModalOpen(true);
                       }}

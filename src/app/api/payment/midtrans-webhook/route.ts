@@ -17,6 +17,9 @@ export async function POST(request: Request) {
     } = notification;
 
     const tenant = await getTenantData();
+    if (!tenant) {
+      return NextResponse.json({ success: false, error: 'Tenant not found' }, { status: 404 });
+    }
 
     // Verify signature if server key is configured
     if (tenant.midtransServerKey && signature_key) {

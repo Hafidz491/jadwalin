@@ -1,5 +1,5 @@
 import { AuthUser, SubscriptionTier, Tenant } from './types';
-import { getTenantData, saveTenantData, clearAllDummyData, saveCourtsData, saveBookingsData } from './data';
+import { getTenantData, saveTenantData, clearAllDummyData, saveCourtsData, saveBookingsData, INITIAL_TENANT } from './data';
 import { Court } from './types';
 
 const AUTH_STORAGE_KEY = 'jadwalin_session_user';
@@ -202,7 +202,7 @@ export async function registerTrialAccount(params: {
   email: string;
   password: string;
   city?: string;
-}): Promise<{ success: boolean; user: AuthUser }> {
+}): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   const now = new Date();
   const endsAt = new Date();
   endsAt.setDate(now.getDate() + 7); // 7-day trial limit!

@@ -8,6 +8,9 @@ export async function POST(request: Request) {
     const { bookingId, bookingCode, customerName, customerPhone, customerEmail, amount, courtName } = body;
 
     const tenant = await getTenantData();
+    if (!tenant) {
+      return NextResponse.json({ success: false, error: 'Tenant not found' }, { status: 404 });
+    }
 
     const snapResult = await createSnapToken(
       {

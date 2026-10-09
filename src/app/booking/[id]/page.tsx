@@ -19,7 +19,7 @@ import {
   MessageCircle,
   Copy
 } from 'lucide-react';
-import { getBookingsData, getTenantData } from '@/lib/data';
+import { getBookingsData, getTenantData, saveBookingsData } from '@/lib/data';
 import { Booking, Tenant } from '@/lib/types';
 import { formatCurrency, formatDateIndo, formatHourRange, createWhatsAppLink } from '@/lib/utils';
 import { generateBookingSuccessMessage } from '@/lib/whatsapp';
