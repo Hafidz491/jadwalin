@@ -142,9 +142,14 @@ export async function saveCourtsAction(tenantId: string, courts: Court[]): Promi
 export async function getBookingsAction(tenantId: string): Promise<Booking[]> {
   const b = await prisma.booking.findMany({ 
     where: { tenantId },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: { court: true }
   });
-  return b as unknown as Booking[];
+  return b.map((bk) => ({
+    ...bk,
+    courtName: bk.court?.name || 'Unknown',
+    sportType: bk.court?.sportType || 'Unknown'
+  })) as unknown as Booking[];
 }
 
 export async function saveBookingsAction(tenantId: string, bookings: Booking[]): Promise<void> {

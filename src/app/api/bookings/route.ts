@@ -15,10 +15,11 @@ export async function GET(request: Request) {
   try {
     if (id || code) {
       const found = await prisma.booking.findFirst({
-        where: { OR: [{ id: id || undefined }, { bookingCode: code || undefined }] }
+        where: { OR: [{ id: id || undefined }, { bookingCode: code || id || undefined }] },
+        include: { court: true }
       });
       if (found) {
-        return NextResponse.json({ success: true, data: found });
+        return NextResponse.json({ success: true, data: { ...found, courtName: found.court?.name || 'Unknown', sportType: found.court?.sportType || 'Unknown' } });
       }
       return NextResponse.json({ success: false, error: 'Booking tidak ditemukan' }, { status: 404 });
     }
@@ -29,9 +30,10 @@ export async function GET(request: Request) {
           tenantId,
           ...(date ? { date } : {}),
           ...(courtId ? { courtId } : {}),
-        }
+        },
+        include: { court: true }
       });
-      return NextResponse.json({ success: true, data: bookings });
+      return NextResponse.json({ success: true, data: bookings.map(b => ({ ...b, courtName: b.court?.name || 'Unknown', sportType: b.court?.sportType || 'Unknown' })) });
     }
 
     return NextResponse.json({ success: true, data: [] });
