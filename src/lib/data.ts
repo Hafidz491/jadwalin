@@ -83,6 +83,14 @@ export const DEMO_BOOKINGS: Booking[] = [];
 
 export function clearAllDummyData(): void {}
 
+function getSlugFromPath(path: string): string | null {
+  if (path.startsWith('/b/')) return path.split('/')[2];
+  if (path !== '/' && !path.startsWith('/admin') && !path.startsWith('/login') && !path.startsWith('/booking')) {
+    return path.split('/')[1];
+  }
+  return null;
+}
+
 export async function getTenantData(): Promise<Tenant | null> {
   const currentUser = getCurrentUser();
   if (currentUser) {
@@ -91,9 +99,8 @@ export async function getTenantData(): Promise<Tenant | null> {
   }
   // Try to find a slug from the URL or similar in client, but actions handle it better.
   if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path.startsWith('/b/')) {
-      const slug = path.split('/')[2];
+    const slug = getSlugFromPath(window.location.pathname);
+    if (slug) {
       if (slug === 'gor-nusantara') return { ...INITIAL_TENANT, slug: 'gor-nusantara' };
       return await getTenantBySlugAction(slug);
     }
@@ -116,9 +123,8 @@ export async function getCourtsData(): Promise<Court[]> {
   }
   
   if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path.startsWith('/b/')) {
-      const slug = path.split('/')[2];
+    const slug = getSlugFromPath(window.location.pathname);
+    if (slug) {
       if (slug === 'gor-nusantara') return DEMO_COURTS;
       const t = await getTenantBySlugAction(slug);
       if (t) return await getCourtsAction(t.id);
@@ -141,9 +147,8 @@ export async function getBookingsData(): Promise<Booking[]> {
   }
   
   if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path.startsWith('/b/')) {
-      const slug = path.split('/')[2];
+    const slug = getSlugFromPath(window.location.pathname);
+    if (slug) {
       if (slug === 'gor-nusantara') return DEMO_BOOKINGS;
       const t = await getTenantBySlugAction(slug);
       if (t) return await getBookingsAction(t.id);
