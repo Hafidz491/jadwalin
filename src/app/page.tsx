@@ -81,9 +81,9 @@ function SectionHeading({
   return (
     <div className="text-center max-w-2xl mx-auto space-y-4">
       <span className="eyebrow">{eyebrow}</span>
-      <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-gradient-silver leading-[1.08]">
+      <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-white leading-[1.08]">
         {title}{' '}
-        {accent && <span className="text-gradient-brand pr-1">{accent}</span>}
+        {accent && <span className="text-emerald-400 pr-1">{accent}</span>}
       </h2>
       <p className="text-[15px] sm:text-base text-slate-400 leading-relaxed">{description}</p>
     </div>

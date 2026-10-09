@@ -2406,7 +2406,7 @@ function AdminDashboardContent() {
   const [notifications, setNotifications] = useState<InboxNotification[]>([]);
   const [isInboxModalOpen, setIsInboxModalOpen] = useState(false);
   const [activeToastNotif, setActiveToastNotif] = useState<InboxNotification | null>(null);
-  const prevBookingsCountRef = React.useRef<number>(0);
+  const prevLatestBookingIdRef = React.useRef<string | null>(null);
 
   const refreshAllData = useCallback(async () => {
     const t = await getTenantData();
@@ -2420,15 +2420,18 @@ function AdminDashboardContent() {
     }
 
     // Auto-detect newly arrived bookings from guest web or API
-    if (prevBookingsCountRef.current > 0 && localBookings.length > prevBookingsCountRef.current) {
+    if (localBookings && localBookings.length > 0) {
       const newestBooking = localBookings[0];
-      if (newestBooking) {
-        const notif = createNotificationFromBooking(newestBooking);
-        setActiveToastNotif(notif);
-        playNotificationSound();
+      if (prevLatestBookingIdRef.current && newestBooking.id !== prevLatestBookingIdRef.current) {
+        // Prevent manual bookings from triggering a popup for the person who created it
+        if (!newestBooking.isManualBooking) {
+          const notif = createNotificationFromBooking(newestBooking);
+          setActiveToastNotif(notif);
+          playNotificationSound();
+        }
       }
+      prevLatestBookingIdRef.current = newestBooking.id;
     }
-    prevBookingsCountRef.current = localBookings.length;
 
     try {
       const res = await fetch('/api/bookings');

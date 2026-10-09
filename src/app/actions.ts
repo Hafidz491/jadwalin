@@ -140,7 +140,10 @@ export async function saveCourtsAction(tenantId: string, courts: Court[]): Promi
 }
 
 export async function getBookingsAction(tenantId: string): Promise<Booking[]> {
-  const b = await prisma.booking.findMany({ where: { tenantId } });
+  const b = await prisma.booking.findMany({ 
+    where: { tenantId },
+    orderBy: { createdAt: 'desc' }
+  });
   return b as unknown as Booking[];
 }
 
