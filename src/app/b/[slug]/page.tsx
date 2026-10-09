@@ -688,6 +688,8 @@ export default function TenantBookingPage() {
             bookings={bookings}
             selectedHours={selectedHours}
             onToggleHour={handleToggleHour}
+            openHour={tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7}
+            closeHour={tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23}
           />
         </section>
         </>

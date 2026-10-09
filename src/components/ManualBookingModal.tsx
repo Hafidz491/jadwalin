@@ -15,6 +15,8 @@ interface ManualBookingModalProps {
   initialDate?: string;
   initialHour?: number;
   onSuccess: (booking: Booking) => void;
+  openHour?: number;
+  closeHour?: number;
 }
 
 export function ManualBookingModal({
@@ -25,6 +27,8 @@ export function ManualBookingModal({
   initialDate,
   initialHour,
   onSuccess,
+  openHour = 7,
+  closeHour = 23,
 }: ManualBookingModalProps) {
   const [selectedCourtId, setSelectedCourtId] = useState(initialCourtId || courts[0]?.id || '');
   const [date, setDate] = useState(initialDate || getTodayDateString());
@@ -209,7 +213,7 @@ export function ManualBookingModal({
                 onChange={(e) => setStartHour(Number(e.target.value))}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-amber-500 outline-none"
               >
-                {Array.from({ length: 17 }, (_, i) => i + 7).map((h) => (
+                {Array.from({ length: closeHour - openHour }, (_, i) => i + openHour).map((h) => (
                   <option key={h} value={h}>
                     {String(h).padStart(2, '0')}:00 WIB
                   </option>

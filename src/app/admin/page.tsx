@@ -1234,6 +1234,7 @@ function CourtsTab({
   onManualBooking,
   onCourtsChange,
   tenantId,
+  tenant,
   courtLimit = 2,
   onOpenSubscription,
 }: {
@@ -1242,6 +1243,7 @@ function CourtsTab({
   onManualBooking: (courtId?: string, hour?: number, date?: string) => void;
   onCourtsChange: (courts: Court[]) => void;
   tenantId: string;
+  tenant: Tenant;
   courtLimit?: number;
   onOpenSubscription?: () => void;
 }) {
@@ -1249,7 +1251,10 @@ function CourtsTab({
   const [panelOpen, setPanelOpen] = useState<'add' | Court | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Court | null>(null);
   const [activeSection, setActiveSection] = useState<'schedule' | 'courts'>('courts');
-  const hoursList = Array.from({ length: 17 }, (_, i) => i + 7);
+  
+  const openH = tenant.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7;
+  const closeH = tenant.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23;
+  const hoursList = Array.from({ length: closeH - openH }, (_, i) => i + openH);
 
   const handleAddCourtClick = () => {
     const u = getCurrentUser();
@@ -2852,6 +2857,7 @@ function AdminDashboardContent() {
                   onManualBooking={handleManualBookingClick}
                   onCourtsChange={setCourts}
                   tenantId={tenant.id}
+                  tenant={tenant}
                   courtLimit={tenant.subscription?.courtLimit || (currentTier === 'PRO' ? 6 : currentTier === 'ENTERPRISE' ? 99 : 2)}
                   onOpenSubscription={() => setIsSubscriptionModalOpen(true)}
                 />
@@ -2878,6 +2884,8 @@ function AdminDashboardContent() {
         initialCourtId={prefilledCourtId}
         initialDate={prefilledDate || getTodayDateString()}
         initialHour={prefilledHour}
+        openHour={tenant?.openTime ? parseInt(tenant.openTime.split(':')[0], 10) : 7}
+        closeHour={tenant?.closeTime ? parseInt(tenant.closeTime.split(':')[0], 10) : 23}
         onSuccess={async (newBooking) => {
           if (newBooking) {
             const u = getCurrentUser();
