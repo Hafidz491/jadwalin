@@ -149,6 +149,12 @@ function Sidebar({
   onLogout,
   isMobileOpen,
   onMobileClose,
+  tenantSlug,
+  tierName,
+  trialInfo,
+  onOpenSubscriptionModal,
+  unreadNotifsCount,
+  onOpenInbox,
 }: {
   active: SidebarTab;
   onChange: (t: SidebarTab) => void;
@@ -157,6 +163,12 @@ function Sidebar({
   onLogout: () => void;
   isMobileOpen: boolean;
   onMobileClose: () => void;
+  tenantSlug: string;
+  tierName: string;
+  trialInfo: { isTrial: boolean; isExpired: boolean; daysLeft: number; endsAt: string };
+  onOpenSubscriptionModal: () => void;
+  unreadNotifsCount: number;
+  onOpenInbox: () => void;
 }) {
   const navItems: { id: SidebarTab; icon: React.ReactNode; label: string; sub: string }[] = [
     { id: 'home', icon: <Home className="w-4 h-4" />, label: 'Home', sub: 'Ringkasan & Booking' },
@@ -194,13 +206,66 @@ function Sidebar({
         </div>
 
         {/* Venue */}
-        <div className="px-3.5 py-3 mx-3.5 mt-4 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/30 border border-white/10/80 shadow-xs shrink-0">
-          <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Venue Aktif</p>
-          <p className="text-xs font-bold text-slate-200 leading-tight mt-0.5 line-clamp-2">{tenantName}</p>
+        <div className="px-3.5 py-3 mx-3.5 mt-4 rounded-2xl bg-white/5 border border-white/10/80 shadow-xs shrink-0 space-y-3">
+          <div>
+            <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Venue Aktif</p>
+            <p className="text-xs font-bold text-slate-200 leading-tight mt-0.5 line-clamp-2">{tenantName}</p>
+          </div>
+          
+          <div className="space-y-1.5">
+            <button
+              onClick={() => {
+                onOpenSubscriptionModal();
+                onMobileClose();
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-white transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-1.5 text-left min-w-0">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span className="text-[10px] font-black text-white truncate">{tierName}</span>
+              </div>
+              {trialInfo.isTrial && (
+                <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
+                  trialInfo.isExpired 
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                }`}>
+                  {trialInfo.isExpired ? 'Trial Habis' : `${trialInfo.daysLeft} Hari`}
+                </span>
+              )}
+            </button>
+            <Link
+              href={`/b/${tenantSlug}`}
+              target="_blank"
+              onClick={onMobileClose}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 hover:text-white transition-all"
+            >
+              <div className="flex items-center gap-1.5 text-left text-[10px] font-semibold">
+                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                <span>Buka Web Tamu</span>
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 mt-5 space-y-1 overflow-y-auto">
+          {/* Kotak Masuk / Inbox */}
+          <button
+            onClick={() => { onOpenInbox(); onMobileClose(); }}
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm group mb-4"
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[12px] font-bold">Kotak Masuk</span>
+            </div>
+            {unreadNotifsCount > 0 && (
+              <span className="flex h-5 min-w-[20px] px-1.5 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                {unreadNotifsCount} Baru
+              </span>
+            )}
+          </button>
+
           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 pb-1.5">Menu Utama</p>
           {navItems.map((item) => {
             const isActive = active === item.id;
@@ -2578,6 +2643,12 @@ function AdminDashboardContent() {
         onLogout={handleLogout}
         isMobileOpen={isMobileSidebarOpen}
         onMobileClose={() => setIsMobileSidebarOpen(false)}
+        tenantSlug={tenant.slug}
+        tierName={tierName}
+        trialInfo={trialInfo}
+        onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+        unreadNotifsCount={unreadNotifsCount}
+        onOpenInbox={() => setIsInboxModalOpen(true)}
       />
 
       <div className="flex-1 min-w-0 flex flex-col">
@@ -2593,14 +2664,14 @@ function AdminDashboardContent() {
             <Link href="/" className="lg:hidden flex items-center shrink-0">
               <Image src="/logo-icon.png" alt="Jadwalin" width={28} height={28} className="w-7 h-7 object-contain" />
             </Link>
-            <div>
+            <div className="hidden sm:block">
               <h1 className="text-sm font-black text-white">
                 {activeTab === 'home' && 'Dashboard Overview'}
                 {activeTab === 'courts' && 'Lapangan & Jadwal'}
                 {activeTab === 'finance' && 'Laporan Keuangan'}
                 {activeTab === 'account' && 'Pengaturan Akun & Profil Usaha'}
               </h1>
-              <p className="text-[10px] text-slate-400 hidden sm:block">{tenant.name}</p>
+              <p className="text-[10px] text-slate-400">{tenant.name}</p>
             </div>
           </div>
 
@@ -2611,57 +2682,6 @@ function AdminDashboardContent() {
               </span>
             )}
 
-            {/* Tombol Kotak Masuk Notifikasi Pesanan */}
-            <button
-              type="button"
-              onClick={() => setIsInboxModalOpen(true)}
-              className="relative p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer shadow-2xs group"
-              title="Kotak Masuk Notifikasi Pesanan"
-            >
-              <Bell className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-              {unreadNotifsCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[9px] shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse">
-                  {unreadNotifsCount}
-                </span>
-              )}
-            </button>
-
-            <Link
-              href={`/b/${tenant.slug}`}
-              target="_blank"
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-400 text-[11px] font-semibold transition-all"
-            >
-              <ArrowUpRight className="w-3 h-3 text-emerald-500" /> Web Tamu
-            </Link>
-
-            {/* Fitur Lihat Paket Owner (Di tengah-tengah Web Tamu dan Booking Walk-In) */}
-            <button
-              onClick={() => setIsSubscriptionModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 border border-blue-500/20 text-white transition-all cursor-pointer shadow-2xs group"
-              title="Klik untuk melihat detail paket & upgrade langganan"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-transform shrink-0" />
-              <div className="flex items-center gap-1.5 text-left">
-                <span className="text-[10px] text-blue-400 font-extrabold uppercase hidden md:inline">Paket:</span>
-                <span className="text-xs font-black text-white">{tierName}</span>
-                {trialInfo.isTrial ? (
-                  trialInfo.isExpired ? (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 shrink-0">
-                      Trial Habis
-                    </span>
-                  ) : (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 shrink-0">
-                      Trial {trialInfo.daysLeft}h
-                    </span>
-                  )
-                ) : (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/20 shrink-0 hidden sm:inline">
-                    Aktif
-                  </span>
-                )}
-              </div>
-            </button>
-
             <button
               onClick={() => handleManualBookingClick()}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
@@ -2670,9 +2690,6 @@ function AdminDashboardContent() {
               <span className="hidden sm:inline">Booking Walk-In</span>
               <span className="sm:hidden">+ Baru</span>
             </button>
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 ml-1">
-              <span className="text-white text-[9px] font-black">{currentUser.name.charAt(0)}</span>
-            </div>
           </div>
         </header>
 
