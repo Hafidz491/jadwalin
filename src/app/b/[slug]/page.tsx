@@ -349,20 +349,18 @@ export default function TenantBookingPage() {
 
             {/* Quick Action & Place Photo */}
             <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3.5 shrink-0">
-              {tenant.bannerUrl && (
-                <div className="w-full sm:w-72 lg:w-80 h-36 sm:h-40 rounded-2xl overflow-hidden relative shadow-md border border-white/10/80 shrink-0 group">
-                  <img
-                    src={tenant.bannerUrl}
-                    alt={tenant.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-3">
-                    <span className="text-[11px] font-bold text-white flex items-center gap-1.5 drop-shadow-sm">
-                      <MapPin className="w-3 h-3 text-teal-400" /> {tenant.city}
-                    </span>
-                  </div>
+              <div className="w-full sm:w-72 lg:w-80 h-36 sm:h-40 rounded-2xl overflow-hidden relative shadow-md border border-white/10/80 shrink-0 group">
+                <img
+                  src={tenant.bannerUrl || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&auto=format&fit=crop&q=80'}
+                  alt={tenant.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-3">
+                  <span className="text-[11px] font-bold text-white flex items-center gap-1.5 drop-shadow-sm">
+                    <MapPin className="w-3 h-3 text-teal-400" /> {tenant.city || 'Kota Tidak Diketahui'}
+                  </span>
                 </div>
-              )}
+              </div>
 
               <a
                 href={`https://wa.me/62${(tenant.phone || '').replace(/\D/g, '').replace(/^(62|0)/, '')}`}
