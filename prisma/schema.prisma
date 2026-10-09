@@ -1,0 +1,195 @@
+// This is your Prisma schema file for Jadwalin SaaS
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  OWNER
+  STAFF
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT // Menunggu Pembayaran DP/Lunas
+  CONFIRMED       // DP Terbayar atau Lunas
+  COMPLETED       // Main selesai & Lunas
+  CANCELLED       // Dibatalkan / Expired
+  NO_SHOW         // Tidak hadir
+}
+
+enum PaymentType {
+  DP_ONLY         // Down Payment (e.g. 30%-50%)
+  FULL_PAYMENT    // 100% Lunas
+  CASH_ON_SITE    // Pembayaran Tunai saat main (manual booking)
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  SETTLEMENT      // Berhasil dibayar via Midtrans / Kasir
+  EXPIRE
+  CANCEL
+  REFUND
+}
+
+enum SubscriptionTier {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+model Tenant {
+  id              String         @id @default(cuid())
+  slug            String         @unique // e.g. "gor-nusantara"
+  name            String         // e.g. "GOR Futsal & Badminton Nusantara"
+  description     String?
+  phone           String         // WA number for customer inquiry & notifications
+  email           String?
+  address         String
+  city            String?
+  logoUrl         String?
+  bannerUrl       String?
+  openTime        String         @default("07:00") // "07:00"
+  closeTime       String         @default("23:00") // "23:00"
+  minDpPercentage Int            @default(30)      // Minimum DP required (e.g. 30%)
+  
+  // Midtrans Configuration per Tenant
+  midtransServerKey String?
+  midtransClientKey String?
+  midtransIsProd    Boolean      @default(false)
+  
+  // WhatsApp Gateway Configuration (Fonnte / Wablas)
+  waGatewayToken    String?
+  waGatewayProvider String       @default("FONNTE") // FONNTE | WABLAS
+  
+  // Subscription info
+  subscriptionTier  SubscriptionTier @default(PRO)
+  subscriptionEnd   DateTime?
+  
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  courts            Court[]
+  bookings          Booking[]
+  users             User[]
+  financialRecords  FinancialRecord[]
+
+  @@index([slug])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  email     String   @unique
+  password  String   // Hashed password
+  role      Role     @default(OWNER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model Court {
+  id              String    @id @default(cuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String    // e.g. "Lapangan 1 - Vinyl Interlock"
+  sportType       String    // "Futsal", "Badminton", "Padel", "Mini Soccer", "Tennis"
+  description     String?
+  imageUrl        String?
+  pricePerHour    Int       // e.g. 150000
+  peakPricePerHour Int?     // e.g. 180000 (malam atau weekend)
+  peakStartHour   Int?      @default(18) // peak starts at 18:00
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings        Booking[]
+
+  @@index([tenantId])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  bookingCode     String        @unique // e.g. "JDW-20260928-8921"
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  courtId         String
+  court           Court         @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  
+  customerName    String
+  customerPhone   String        // WhatsApp format e.g. 08123456789
+  customerEmail   String?
+  notes           String?
+  
+  date            String        // "YYYY-MM-DD"
+  startHour       Int           // e.g. 15 (15:00)
+  endHour         Int           // e.g. 17 (17:00, 2 hours duration)
+  durationHours   Int           @default(1)
+  
+  totalAmount     Int           // Total rental cost (e.g. 300000)
+  dpAmount        Int           // Down Payment required/paid (e.g. 100000)
+  remainingAmount Int           // Sisa bayar di kasir (e.g. 200000)
+  
+  paymentType     PaymentType   @default(DP_ONLY)
+  bookingStatus   BookingStatus @default(PENDING_PAYMENT)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  
+  isManualBooking Boolean       @default(false) // true if booked by admin directly at counter/phone
+  bookedByStaff   String?       // staff name or ID
+  
+  // Midtrans reference
+  snapToken       String?
+  snapRedirectUrl String?
+  midtransOrderId String?       @unique
+  paymentMethod   String?       // "gopay", "qris", "bca_va", "cash"
+  paidAt          DateTime?
+  
+  // WhatsApp Notification Status
+  waNotificationSent Boolean    @default(false)
+  waMessageId        String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  payments        Payment[]
+
+  @@index([tenantId, date])
+  @@index([courtId, date, startHour])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  bookingId       String
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount          Int
+  paymentMethod   String        // "MIDTRANS_QRIS", "MIDTRANS_VA", "CASH_ON_SITE"
+  paymentStatus   PaymentStatus @default(PENDING)
+  midtransTransId String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+
+  @@index([bookingId])
+}
+
+model FinancialRecord {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  date        String   // "YYYY-MM-DD"
+  type        String   // "DP_ONLINE", "PELUNASAN_CASH", "PENGELUARAN"
+  category    String   // "BOOKING_INCOME", "OPERATIONAL_EXPENSE"
+  amount      Int
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, date])
+}
