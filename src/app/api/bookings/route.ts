@@ -4,6 +4,8 @@ import { generateBookingCode } from '@/lib/utils';
 import prisma from '@/lib/prisma';
 import { addBookingAction } from '@/app/actions';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

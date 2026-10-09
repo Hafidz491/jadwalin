@@ -49,7 +49,7 @@ export default function TenantBookingPage() {
 
     try {
       const currentTenantId = loadedTenant?.id || tenant.id;
-      const res = await fetch(`/api/bookings?tenantId=${currentTenantId}`);
+      const res = await fetch(`/api/bookings?tenantId=${currentTenantId}`, { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {

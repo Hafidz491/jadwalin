@@ -48,52 +48,57 @@ export default function BookingSuccessPage() {
 
   // Fetch from server API if not found in client localStorage (e.g. mobile or incognito access)
   useEffect(() => {
-    if (!booking && bookingId) {
+    let isMounted = true;
+    if (!bookingId) return;
+
+    const loadBooking = async () => {
       setIsLoading(true);
-      fetch(`/api/bookings?id=${encodeURIComponent(bookingId)}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then(async (json) => {
+      try {
+        const res = await fetch(`/api/bookings?id=${encodeURIComponent(bookingId)}`);
+        let b = null;
+        if (res.ok) {
+          const json = await res.json();
           if (json && json.data) {
-            setBooking(json.data);
-            const t = await getTenantData();
-            if (t) setTenant(t);
-            try {
-              const all = await getBookingsData();
-              if (!all.some((b) => b.id === json.data.id || b.bookingCode === json.data.bookingCode)) {
-                all.unshift(json.data);
-                await saveBookingsData(all);
-              }
-            } catch {}
-          } else {
-            throw new Error('Not found');
+            b = json.data;
           }
-        })
-        .catch(() => {
-          try {
-            const demo = sessionStorage.getItem(`demo_booking_${bookingId}`);
-            if (demo) setBooking(JSON.parse(demo));
-          } catch {}
-        })
-        .finally(() => setIsLoading(false));
-    } else if (bookingId) {
-      // Fallback
-      setIsLoading(true);
-      (async () => {
-        const t = await getTenantData();
-        if (t) setTenant(t);
-        const all = await getBookingsData();
-        let b = all.find((b) => b.id === bookingId || b.bookingCode === bookingId) || null;
+        }
+        
+        // If API fails or returns null, fallback to local storage
+        if (!b) {
+          const all = await getBookingsData();
+          b = all.find((item) => item.id === bookingId || item.bookingCode === bookingId) || null;
+        }
+
+        // If still null, try sessionStorage
         if (!b) {
           try {
             const demo = sessionStorage.getItem(`demo_booking_${bookingId}`);
             if (demo) b = JSON.parse(demo);
           } catch {}
         }
-        setBooking(b);
-        setIsLoading(false);
-      })();
-    }
-  }, [booking, bookingId]);
+
+        if (isMounted) {
+          setBooking(b);
+          if (b) {
+            const t = await getTenantData();
+            if (t) setTenant(t);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadBooking();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [bookingId]);
 
   if (isLoading) {
     return (
