@@ -2552,7 +2552,7 @@ function AdminDashboardContent() {
     }
 
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetch(`/api/bookings?tenantId=${tenant?.id || tenantId}`);
       if (res.ok) {
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {

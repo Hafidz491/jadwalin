@@ -48,7 +48,8 @@ export default function TenantBookingPage() {
     if (loadedCourts) setCourts(loadedCourts);
 
     try {
-      const res = await fetch('/api/bookings');
+      const currentTenantId = loadedTenant?.id || tenant.id;
+      const res = await fetch(`/api/bookings?tenantId=${currentTenantId}`);
       if (res.ok) {
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {
