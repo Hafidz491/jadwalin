@@ -48,6 +48,7 @@ model Tenant {
   id              String         @id @default(cuid())
   slug            String         @unique // e.g. "gor-nusantara"
   name            String         // e.g. "GOR Futsal & Badminton Nusantara"
+  ownerName       String?
   description     String?
   phone           String         // WA number for customer inquiry & notifications
   email           String?

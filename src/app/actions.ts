@@ -51,6 +51,7 @@ export async function saveTenantAction(tenant: Tenant): Promise<void> {
     where: { id: tenant.id },
     update: {
       name: tenant.name,
+      ownerName: tenant.ownerName,
       slug: tenant.slug,
       description: tenant.description || '',
       phone: tenant.phone,
@@ -67,6 +68,7 @@ export async function saveTenantAction(tenant: Tenant): Promise<void> {
     create: {
       id: tenant.id,
       name: tenant.name,
+      ownerName: tenant.ownerName,
       slug: tenant.slug || `slug-${Date.now()}`,
       description: tenant.description || '',
       phone: tenant.phone || '081234567890',

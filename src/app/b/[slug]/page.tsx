@@ -315,13 +315,19 @@ export default function TenantBookingPage() {
               </div>
 
               <div className="flex items-center gap-3.5">
-                {tenant.logoUrl && (
-                  <img
-                    src={tenant.logoUrl}
-                    alt={tenant.name}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border border-white/10/90 shadow-sm shrink-0 bg-slate-900/50"
-                  />
-                )}
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-white/10/90 shadow-sm shrink-0 bg-teal-500/20 flex items-center justify-center">
+                  {tenant.logoUrl ? (
+                    <img
+                      src={tenant.logoUrl}
+                      alt={tenant.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl sm:text-2xl font-black text-teal-400">
+                      {tenant.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
                   {tenant.name}
                 </h1>

@@ -2244,13 +2244,40 @@ function AccountTab({
                 )}
               </div>
               <div className="flex-1">
-                <input
-                  type="url"
-                  value={form.logoUrl}
-                  onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
-                  placeholder="https://... URL logo usaha"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 text-xs text-slate-200 outline-none transition-all font-mono"
-                />
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 2 * 1024 * 1024) {
+                          alert('Ukuran file maksimal 2MB.');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => setForm({ ...form, logoUrl: reader.result as string });
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                    id="tenant-logo-upload"
+                  />
+                  <label
+                    htmlFor="tenant-logo-upload"
+                    className="px-3.5 py-2.5 rounded-xl border border-white/10 hover:border-indigo-500 hover:bg-indigo-500/10 text-slate-300 hover:text-indigo-400 text-xs font-bold transition-all cursor-pointer flex items-center justify-center shrink-0"
+                    title="Upload logo dari perangkat"
+                  >
+                    <ImagePlus className="w-4 h-4" />
+                  </label>
+                  <input
+                    type="url"
+                    value={form.logoUrl || ''}
+                    onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                    placeholder="Atau URL https://..."
+                    className="flex-1 w-full px-3.5 py-2.5 rounded-xl border border-white/10 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 text-xs text-slate-200 outline-none transition-all font-mono"
+                  />
+                </div>
               </div>
             </div>
           </div>
